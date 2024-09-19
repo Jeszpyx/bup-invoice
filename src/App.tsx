@@ -1,35 +1,127 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import {
+  Textarea,
+  NumberInput,
+  Button,
+  Box,
+  Stack,
+  Container,
+  TextInput,
+  Center,
+} from "@mantine/core";
+import toast from "react-hot-toast";
+import { IconAt } from "@tabler/icons-react";
+
+const cardsMinCount = 10;
+const cardsMaxCount = 5000;
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [requisites, setRequisites] = useState<string>("");
+  const [cardCount, setCardCount] = useState<number>(cardsMinCount);
+  const [email, setEmail] = useState<string>("");
+  const [errors, setErrors] = useState<{
+    requisites?: string;
+    cardCount?: string;
+    email?: string;
+  }>({});
+
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validate = () => {
+    const newErrors: {
+      requisites?: string;
+      cardCount?: string;
+      email?: string;
+    } = {};
+
+    if (!requisites.trim()) {
+      newErrors.requisites = "Реквизиты не могут быть пустыми";
+    }
+
+    if (cardCount < cardsMinCount || cardCount > cardsMaxCount) {
+      newErrors.cardCount = `Количество карт должно быть от ${cardsMinCount} до ${cardsMaxCount}`;
+    }
+
+    if (!isValidEmail(email)) {
+      newErrors.email = "Введите корректный email адрес";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) {
+      toast.error("Пожалуйста, исправьте ошибки в форме");
+      return;
+    }
+
+    try {
+      const response = await fetch("https://threepoplars.ru/bup/api/invoice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ requisites, cardCount, email }),
+        credentials: "include",
+      });
+      //TODO: остановился тут
+      toast.success(await response.json());
+    } catch (error) {
+      console.error("Ошибка при отправке запроса:", error);
+      toast.error(JSON.stringify(error));
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Center h={"100vh"}>
+      <Box display="flex">
+        <Container
+          size="xs"
+          sx={{
+            padding: "20px",
+            backgroundColor: "white",
+            borderRadius: "8px",
+            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <Stack spacing="md">
+            <Textarea
+              label="Реквизиты"
+              value={requisites}
+              onChange={(event) => setRequisites(event.currentTarget.value)}
+              autosize
+              minRows={4}
+              withAsterisk
+              error={errors.requisites}
+            />
+            <NumberInput
+              label="Количество карт"
+              value={cardCount}
+              onChange={(value) => setCardCount(Number(value))}
+              withAsterisk
+              min={cardsMinCount}
+              max={cardsMaxCount}
+              error={errors.cardCount}
+            />
+            <TextInput
+              label="Email"
+              leftSection={<IconAt size={16} />}
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.currentTarget.value)}
+              withAsterisk
+              error={errors.email}
+            />
+            <Button onClick={handleSubmit}>Получить документ</Button>
+          </Stack>
+        </Container>
+      </Box>
+    </Center>
+  );
 }
 
-export default App
+export default App;
