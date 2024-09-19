@@ -81,14 +81,14 @@ function App() {
       <Box display="flex">
         <Container
           size="xs"
-          sx={{
+          style={{
             padding: "20px",
             backgroundColor: "white",
             borderRadius: "8px",
             boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <Stack spacing="md">
+          <Stack gap="md">
             <Textarea
               label="Реквизиты"
               value={requisites}
