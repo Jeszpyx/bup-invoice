@@ -67,6 +67,7 @@ function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Access-Control-Allow-Credentials": "true",
         },
         body: JSON.stringify({
           details: requisites,
