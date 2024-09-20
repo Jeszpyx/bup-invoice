@@ -113,7 +113,6 @@ function App() {
       toast.success("Документ успешно загружен");
     } catch (error) {
       console.error("Ошибка при выполнении запроса:", error);
-      toast.error(`Произошла ошибка при загрузке документа: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
