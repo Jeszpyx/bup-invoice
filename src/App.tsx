@@ -17,7 +17,7 @@ const cardsMaxCount = 5000;
 
 function App() {
   const [requisites, setRequisites] = useState<string>("");
-  const [cardCount, setCardCount] = useState<number>(cardsMinCount);
+  const [cardsCount, setCardCount] = useState<number>(cardsMinCount);
   const [email, setEmail] = useState<string>("");
   const [errors, setErrors] = useState<{
     requisites?: string;
@@ -41,7 +41,7 @@ function App() {
       newErrors.requisites = "Реквизиты не могут быть пустыми";
     }
 
-    if (cardCount < cardsMinCount || cardCount > cardsMaxCount) {
+    if (cardsCount < cardsMinCount || cardsCount > cardsMaxCount) {
       newErrors.cardCount = `Количество карт должно быть от ${cardsMinCount} до ${cardsMaxCount}`;
     }
 
@@ -60,19 +60,52 @@ function App() {
     }
 
     try {
+      console.log("Начало запроса");
       const response = await fetch("https://threepoplars.ru/bup/api/invoice", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ requisites, cardCount, email }),
+        body: JSON.stringify({
+          details: requisites,
+          cardsCount,
+          email,
+        }),
         credentials: "include",
       });
-      //TODO: остановился тут
-      toast.success(await response.json());
+      console.log("Ответ получен:", response.status, response.statusText);
+
+      if (!response.ok) {
+        console.error("Ошибка ответа:", response.status, response.statusText);
+        toast.error("Произошла ошибка при загрузке документа");
+        return;
+      }
+
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "invoice.pdf";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      console.log("Имя файла:", filename);
+
+      const blob = await response.blob();
+      console.log("Blob получен, размер:", blob.size);
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success("Документ успешно загружен");
     } catch (error) {
-      console.error("Ошибка при отправке запроса:", error);
-      toast.error(JSON.stringify(error));
+      console.error("Ошибка при выполнении запроса:", error);
+      toast.error("Произошла ошибка при загрузке документа");
     }
   };
 
@@ -100,7 +133,7 @@ function App() {
             />
             <NumberInput
               label="Количество карт"
-              value={cardCount}
+              value={cardsCount}
               onChange={(value) => setCardCount(Number(value))}
               withAsterisk
               min={cardsMinCount}
