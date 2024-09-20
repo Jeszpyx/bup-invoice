@@ -86,28 +86,17 @@ function App() {
           response.statusText,
           errorText
         );
-        toast.error(`Произошла ошибка при загрузке документа: ${errorText}`);
+        toast.error(`Произошла ошибка при загрузке документа`);
         return;
       }
 
-      const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = "invoice.pdf";
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
-        }
-      }
-      console.log("Имя файла:", filename);
-
       const blob = await response.blob();
-      console.log("Blob получен, размер:", blob.size);
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = "none";
       a.href = url;
-      a.download = filename;
+      a.download = "ОДО Белукрпром договор-счёт";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -159,7 +148,11 @@ function App() {
               withAsterisk
               error={errors.email}
             />
-            <Button onClick={handleSubmit} loading={isLoading}>
+            <Button
+              onClick={handleSubmit}
+              loading={isLoading}
+              disabled={isLoading}
+            >
               Получить документ
             </Button>
           </Stack>
