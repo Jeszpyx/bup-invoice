@@ -24,6 +24,7 @@ function App() {
     cardCount?: string;
     email?: string;
   }>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -59,6 +60,7 @@ function App() {
       return;
     }
 
+    setIsLoading(true);
     try {
       console.log("Начало запроса");
       const response = await fetch("https://threepoplars.ru/bup/api/invoice", {
@@ -76,8 +78,14 @@ function App() {
       console.log("Ответ получен:", response.status, response.statusText);
 
       if (!response.ok) {
-        console.error("Ошибка ответа:", response.status, response.statusText);
-        toast.error("Произошла ошибка при загрузке документа");
+        const errorText = await response.text();
+        console.error(
+          "Ошибка ответа:",
+          response.status,
+          response.statusText,
+          errorText
+        );
+        toast.error(`Произошла ошибка при загрузке документа: ${errorText}`);
         return;
       }
 
@@ -105,7 +113,9 @@ function App() {
       toast.success("Документ успешно загружен");
     } catch (error) {
       console.error("Ошибка при выполнении запроса:", error);
-      toast.error("Произошла ошибка при загрузке документа");
+      toast.error(`Произошла ошибка при загрузке документа: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -149,7 +159,9 @@ function App() {
               withAsterisk
               error={errors.email}
             />
-            <Button onClick={handleSubmit}>Получить документ</Button>
+            <Button onClick={handleSubmit} loading={isLoading}>
+              Получить документ
+            </Button>
           </Stack>
         </Container>
       </Box>
